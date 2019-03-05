@@ -1,7 +1,7 @@
 
 # Google+ archive viewer written in javascript
 
-This viewer comes in a single html file, and reads JSON files as exported by the Friends+Me Google+ Exporter. For a demo have a look at my g+ maths blog archive here:
+This viewer comes as a single html file, and reads JSON files as exported by the Friends+Me Google+ Exporter. For a demo, have a look at my g+ maths blog archive here:
 
 https://refurioanachro.github.io/g-viewer/
 
@@ -37,5 +37,9 @@ https://github.com/RefurioAnachro/g-viewer/tree/src
 
 Tell me what you think, patches or pull requests also welcome.
 
-https://mastodon.cloud/@RefurioAnachro.html
-https://pluspora.com/people/a2efef60d6c70136b502005056264835
+- https://mastodon.cloud/@RefurioAnachro.html
+- https://pluspora.com/people/a2efef60d6c70136b502005056264835
+
+If you must, the g+ announcement is here:
+
+https://plus.google.com/+RefurioAnachro/posts/ZgUMDkLtSFP
