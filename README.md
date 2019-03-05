@@ -3,7 +3,7 @@
 
 This viewer comes in a single html file, and reads JSON files as exported by the Friends+Me Google+ Exporter. For a demo have a look at my g+ maths blog archive here:
 
-https://refurioanachro.github.io/g-viewer/g+viewer.html
+https://refurioanachro.github.io/g-viewer/
 
 ## Getting started
 
@@ -15,7 +15,7 @@ If you haven't, download your g+ streams with it now! As long as you have fewer 
 
 After downloading, export the relevant streams in JSON format. Among other things, that will generate two directories called `google-plus-exports` and `google-plus-images`, put those in your webserver's htdocs directory. Also add the `g+viewer.html` you can download by right-clicking the "raw" button here:
 
-https://github.com/RefurioAnachro/g-viewer/blob/master/g%2Bviewer.html
+https://github.com/RefurioAnachro/g-viewer/blob/master/google-plus-viewer.html
 
 When you've uploaded these three items give it a go, it should be working now!
 
