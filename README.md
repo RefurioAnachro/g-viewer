@@ -21,9 +21,11 @@ https://github.com/RefurioAnachro/g-viewer/blob/master/google-plus-viewer.html
 
 To make it run, you will need to edit that `google-plus-viewer.html` file to add your feeds' filenames:
 
+```
 var feeds = {
   "some title": "g+feed....",
 }
+```
 
 Then also put that file on your server. When you've uploaded these three items give it a go, it should be working right away!
 
@@ -31,7 +33,7 @@ If you don't use an actual webserver daemon, reading external files with XMLHttp
 
 You wouldn't want to clone the full repo, as that would include all of my blog, which comes at about 300M.
 
-Tell me what you think, patches or pull requests welcome.
+Tell me what you think, patches or pull requests also welcome.
 
 https://mastodon.cloud/@RefurioAnachro.html
 https://pluspora.com/people/a2efef60d6c70136b502005056264835
