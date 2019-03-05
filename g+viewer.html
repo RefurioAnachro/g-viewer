@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html><head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>Refurio Anachro's google+ archive</title>
+
+<style>
+
+body {
+  background-color: #bebebe;
+}
+
+div#feed {
+  max-width: 500px;
+}
+
+div.post {
+  background-color: white;
+  margin-bottom: 3em;
+  padding: 1em;
+}
+
+div.header {
+  margin-bottom: 1em;
+}
+div.message {
+  max-height: 8em;
+  overflow: hidden;
+}
+
+span.author {
+  margin-bottom: 5em;
+}
+span.date {
+  float: right;
+}
+
+span.bold {
+  font-weight: bold;
+}
+span.italic {
+  font-style: italic;
+}
+span.strikethrough {
+  text-decoration: line-through;
+}
+span.tag {
+  color: #0000ff;
+}
+span.user {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+img {
+  max-width: 100%;
+  margin-top: 1em;
+}
+
+</style>
+
+</head><body>
+  <div class="wrapper"><div id="feed">loading json data...</div></div>
+
+  <script type="text/javascript">
+
+make_xmlhttprequest = function() {
+    try {
+	var ret = new XMLHttpRequest();
+	if(ret.overrideMimeType)
+	    ret.overrideMimeType('text/html');
+	return ret;
+    }
+    catch (e) {}
+    try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); }
+    catch (e) {}
+    try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); }
+    catch (e) {}
+    try { return new ActiveXObject("Msxml2.XMLHTTP"); }
+    catch (e) {}
+    try { return new ActiveXObject("Microsoft.XMLHTTP"); }
+    catch (e) {}
+    console.error("XMLHTTPRequest not available");
+    return null;
+};
+
+function fetch_file(url, handler) {
+    var c = make_xmlhttprequest();
+    if(!c)
+	return null;
+    c.onreadystatechange = function _handler(ev) {
+	switch(c.readyState) {
+	case 0: // UNSENT
+	case 1: // WAITING
+	case 2: // HEADERS
+	case 3: // LOADING
+	    return true;
+	case 4: // DONE
+	    if(c.status)
+		handler(c.responseText, c);
+	    else
+		handler(null, c);
+	    return true;
+	};
+    };
+    c.open("GET", url, true);
+    c.withCredentials = true; // allow server to set cookies
+    c.send();
+    return true;
+}
+
+function format_message(message) {
+    var ret = "";
+    for(i in message) {
+	if(message[i][0] == 0) {
+	    var c = "text";
+	    if(message[i][2] && message[i][2].bold)
+		c += " bold";
+	    if(message[i][2] && message[i][2].italic)
+		c += " italic";
+	    if(message[i][2] && message[i][2].strikethrough)
+		c += " strikethrough";
+ 	    ret += "<span class='"+ c +"'>"+ message[i][1] +"</span>\n";
+	}
+	else if(message[i][0] == 1)
+	    ret += "<br>";
+	else if(message[i][0] == 2)
+ 	    ret += "<a href='"+ message[i][2] +"' class='link'>"+ message[i][1] +"</a>\n";
+	else if(message[i][0] == 3)
+ 	    ret += "<span class='user'>+"+ message[i][1] +"</span>\n";
+	else if(message[i][0] == 4)
+ 	    ret += "<span class='tag'>"+ message[i][1] +"</span>\n";
+	else
+ 	    ret += "<p>("+ message[i][0] +") "+ message[i][1] +"</p>\n";
+    };
+    return ret;
+};
+function format_date(date) {
+    return date.substr(0,10);
+};
+function format_post(post) {
+    var ret = "";
+    ret += "<span class='author'>"+ post.publicId[0] +"</span>";
+    ret += "<span class='date'>"+ format_date(post.createdAt) +"</span>";
+    ret = "<div class='header'>"+ ret +"</div>";
+    ret += "<div class='message'>"+ format_message(post.message) +"</div>\n";
+    if(post.image)
+	ret += "<img src='google-plus-images/"+ images[post.image.proxy] +"'>";
+    return ret;
+};
+function format_json(json) {
+    var ret = "";
+    var j = json.accounts[0].collections[0].posts;
+    for(var i in j)
+	ret += "<div class='post'>"+ format_post(j[i]) +"</div>\n";
+    return ret;
+};
+
+function render(text) {
+    document.getElementById("feed").innerHTML = format_json(JSON.parse(text));
+};
+
+var feeds = {
+    "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
+    "lost in found maths": "g+-feed-115434895453136495635-0hSTf-lost-in-found-maths-collection-20190116-1of1.json",
+};
+for(var i in feeds) {
+    feed = feeds[i];
+    break;
+};
+
+var images;
+
+function unquote(s) {
+    if(!s || s.length < 2)
+	return "zero";
+    return s.substr(1,s.length-2);
+};
+
+function index_images(csv) {
+    images = {};
+    var lines = csv.split("\n");
+    var skip = 1;
+    for(var i in lines) {
+	if(skip) {
+	    skip = 0;
+	    continue;
+	};
+	var row = lines[i].split(";");
+	images[unquote(row[0])] = unquote(row[2]);
+    };
+}
+
+if(!images)
+    fetch_file("google-plus-exports/google-plus-image-list.csv", function(csv) {
+	index_images(csv);
+	fetch_file("google-plus-exports/"+ feed, render);
+    });
+else
+    fetch_file("google-plus-exports/"+ feed, render);
+
+  </script>
+</body></html>
