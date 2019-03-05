@@ -9,8 +9,20 @@ body {
   background-color: #bebebe;
 }
 
-div#feed {
+div#body {
   max-width: 500px;
+}
+div#chooser {
+  max-width: 500px;
+  margin-bottom: 3em;
+  background-color: white;
+  padding-top: 1em;
+  padding-bottom: 1em;
+}
+div.feed {
+  font-weight: bold;
+  padding-left: 1em;
+  padding-right: 1em;
 }
 
 div.post {
@@ -25,6 +37,20 @@ div.header {
 div.message {
   max-height: 8em;
   overflow: hidden;
+}
+div.comments {
+  display: none;
+}
+div.comment {
+  margin-top: 1em;
+  border-top: 1px solid black;
+}
+
+div.post.unfolded div.message {
+  max-height: initial;
+}
+div.post.unfolded div.comments {
+  display: block;
 }
 
 span.author {
@@ -59,7 +85,8 @@ img {
 </style>
 
 </head><body>
-  <div class="wrapper"><div id="feed">loading json data...</div></div>
+  <div id="chooser">this google+ archive viewer requires javascript</div>
+  <div id="body"></div>
 
   <script type="text/javascript">
 
@@ -137,6 +164,21 @@ function format_message(message) {
 function format_date(date) {
     return date.substr(0,10);
 };
+function format_comment(post) {
+    var ret = "";
+    ret += "<span class='author'>"+ post.author.name +"</span>";
+    ret += "<span class='date'>"+ format_date(post.createdAt) +"</span>";
+    ret = "<div class='header'>"+ ret +"</div>";
+    ret += format_message(post.message);
+    return "<div class='comment'>"+ ret +"</div>";
+};
+function format_comments(comments) {
+    var ret = "";
+    for(var i in comments)
+	ret += format_comment(comments[i]);
+    return ret;
+};
+
 function format_post(post) {
     var ret = "";
     ret += "<span class='author'>"+ post.publicId[0] +"</span>";
@@ -145,30 +187,34 @@ function format_post(post) {
     ret += "<div class='message'>"+ format_message(post.message) +"</div>\n";
     if(post.image)
 	ret += "<img src='google-plus-images/"+ images[post.image.proxy] +"'>";
+    ret += "<div class='comments'>"+ format_comments(post.comments) +"</div>";
     return ret;
 };
-function format_json(json) {
+function format_stream(j) {
     var ret = "";
-    var j = json.accounts[0].collections[0].posts;
     for(var i in j)
 	ret += "<div class='post'>"+ format_post(j[i]) +"</div>\n";
     return ret;
 };
+function format_json(json) {
+    var ret = "";
+    var j;
+    if(json.accounts[0].collections.length)
+	ret += format_stream(json.accounts[0].collections[0].posts);
+    if(json.accounts[0].communities.length)
+	ret += format_stream(json.accounts[0].communities[0].categories[0].posts);
+    return ret;
+};
+function format_chooser(feeds) {
+    var ret = "";
+    for(var i in feeds)
+	ret += "<div class='feed' onclick='load_feed(\""+ feeds[i] +"\")'>"+ i +"</div>";
+    return ret;
+};
 
 function render(text) {
-    document.getElementById("feed").innerHTML = format_json(JSON.parse(text));
+    document.getElementById("body").innerHTML = format_json(JSON.parse(text));
 };
-
-var feeds = {
-    "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
-    "lost in found maths": "g+-feed-115434895453136495635-0hSTf-lost-in-found-maths-collection-20190116-1of1.json",
-};
-for(var i in feeds) {
-    feed = feeds[i];
-    break;
-};
-
-var images;
 
 function unquote(s) {
     if(!s || s.length < 2)
@@ -188,15 +234,52 @@ function index_images(csv) {
 	var row = lines[i].split(";");
 	images[unquote(row[0])] = unquote(row[2]);
     };
-}
+};
 
-if(!images)
-    fetch_file("google-plus-exports/google-plus-image-list.csv", function(csv) {
-	index_images(csv);
-	fetch_file("google-plus-exports/"+ feed, render);
-    });
-else
-    fetch_file("google-plus-exports/"+ feed, render);
+function click_handler(ev) {
+    for(var n = document.getElementById("body").firstElementChild; n; n = n.nextElementSibling)
+	n.className = "post";
+    for(var n = ev.target; n; n = n.parentElement) {
+	if(n.className != "post")
+	    continue;
+	n.className = "post unfolded";
+	window.scrollTo(0, n.offsetTop);
+    };
+};
+
+function load_feed(filename) {
+    document.getElementById("body").innerHTML = "loading json data...";
+    if(!images)
+	fetch_file("google-plus-exports/google-plus-image-list.csv", function(csv) {
+	    index_images(csv);
+	    fetch_file("google-plus-exports/"+ filename, render);
+	});
+    else
+	fetch_file("google-plus-exports/"+ filename, render);
+};
+
+var feeds = {
+    "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
+    "lost in found maths": "g+-feed-115434895453136495635-0hSTf-lost-in-found-maths-collection-20190116-1of1.json",
+    "mandelbrot impressions": "g+-feed-117866562756294273963-4Cccx-mandelbrot-impressions-collection-20190116-1of1.json",
+    "math collections and communities": "g+-feed-115434895453136495635-102996148350668699295-math-collections-and-communities-community-20190116-1of1.json",
+//     "profile": "g+-feed-115434895453136495635--profile-20190116-1of1.json",
+    "zz circleshare graveyard": "g+-feed-115434895453136495635-UIsePE-zz-circleshare-graveyard-collection-20190116-1of1.json",
+//    "a mathematicians playlist": "g+-feed-117866562756294273963-AejbfB-a-mathematicians-playlist-collection-20190116-1of1.json",
+//    "zz circle shares archive": "g+-feed-117866562756294273963-QzKfPE-zz-circle-shares-archive-collection-20190116-1of1.json",
+//    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
+};
+
+for(var i in feeds) {
+    load_feed(feeds[i]);
+    break;
+};
+
+document.getElementById("chooser").innerHTML = format_chooser(feeds);
+
+var images;
+
+document.onclick = click_handler;
 
   </script>
 </body></html>
