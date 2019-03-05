@@ -13,15 +13,23 @@ https://gplus-exporter.friendsplus.me/
 
 If you haven't, download your g+ streams with it now! As long as you have fewer than 800 posts per stream, it's free of charge. Otherwise it'll stop after 800 posts. You can try downloading your collections separately instead. On the other hand, the author is a nice guy, and you wouldn't do harm by throwing a few bucks his way (since he asked nicely).
 
-After downloading, export the relevant streams in JSON format. Among other things, that will generate two directories called `google-plus-exports` and `google-plus-images`, put those in your webserver's htdocs directory. Also add the `g+viewer.html` you can download by right-clicking the "raw" button here:
+After downloading, export the relevant streams in JSON format. Among other things, that will generate two directories called `google-plus-exports` and `google-plus-images`, put those in your webserver's htdocs directory.
+
+Then fetch `g+viewer.html` by right-clicking the "raw" button here:
 
 https://github.com/RefurioAnachro/g-viewer/blob/master/google-plus-viewer.html
 
-When you've uploaded these three items give it a go, it should be working now!
+To make it run, you will need to edit that `google-plus-viewer.html` file to add your feeds' filenames:
 
-If you don't use an actual webserver daemon, reading external files with xmlhttprequest may fail, but you may be able to tweak your browser to make it work nevertheless.
+var feeds = {
+  "some title": "g+feed....",
+}
 
-At the moment, you wouldn't want to clone the repo, as that would include all of my blog, which comes at about 300M.
+Then also put that file on your server. When you've uploaded these three items give it a go, it should be working right away!
+
+If you don't use an actual webserver daemon, reading external files with XMLHttpRequest may fail, but you may be able to tweak your browser to make it work nevertheless!
+
+You wouldn't want to clone the full repo, as that would include all of my blog, which comes at about 300M.
 
 Tell me what you think, patches or pull requests welcome.
 
