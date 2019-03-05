@@ -15,11 +15,11 @@ If you haven't, download your g+ streams with it now! As long as you have fewer 
 
 After downloading, export the relevant streams in JSON format. Among other things, that will generate two directories called `google-plus-exports` and `google-plus-images`, put those in your webserver's htdocs directory.
 
-Then fetch `g+viewer.html` by right-clicking the "raw" button here:
+Then fetch `g+viewer.html` by right-clicking here:
 
-https://github.com/RefurioAnachro/g-viewer/blob/master/google-plus-viewer.html
+https://github.com/RefurioAnachro/g-viewer/raw/master/google-plus-viewer.html
 
-To make it run, you will need to edit that `google-plus-viewer.html` file to add your feeds' filenames:
+To make it run, you will need to edit that `google-plus-viewer.html` file to add your feeds' filenames as found in the `google-plus-exports` directory:
 
 ```
 var feeds = {
@@ -29,9 +29,11 @@ var feeds = {
 
 Then also put that file on your server. When you've uploaded these three items give it a go, it should be working right away!
 
-If you don't use an actual webserver daemon, reading external files with XMLHttpRequest may fail, but you may be able to tweak your browser to make it work nevertheless!
+If you don't use an actual webserver daemon, reading external files with XMLHttpRequest like this may fail, but you may be able to tweak your browser to make it work nevertheless!
 
-You wouldn't want to clone the full repo, as that would include all of my blog, which comes at about 300M.
+You wouldn't want to clone the full repo, as that would include all of my blog, which comes at about 300M. I have added a branch named `src` which has only the viewer:
+
+https://github.com/RefurioAnachro/g-viewer/tree/src
 
 Tell me what you think, patches or pull requests also welcome.
 
