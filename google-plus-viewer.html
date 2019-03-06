@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html><head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+
   <title>Refurio Anachro's google+ archive</title>
 
 <style>
 
 body {
+  max-width: 500px;
   background-color: #bebebe;
 }
 
-div#body {
-  max-width: 500px;
-}
 div#chooser {
   max-width: 500px;
   margin-bottom: 0.5em;
@@ -25,6 +25,25 @@ div.feed {
   padding-right: 1em;
 }
 
+div.pager span {
+  margin-left: 1ex;
+  display: inline-block;
+}
+div.pager span.current {
+  color: #bebebe;
+}
+
+div.collection div.name ,
+div.community div.name {
+  font-size: 200%;
+}
+div.community div.tagline {
+  font-size: 150%;
+}
+
+div.collection ,
+div.community ,
+div.pager ,
 div.post {
   background-color: white;
   margin-bottom: 0.5em;
@@ -43,6 +62,7 @@ div.comments {
 }
 div.comment {
   margin-top: 1em;
+  padding-top: 1em;
   border-top: 1px solid black;
 }
 
@@ -53,11 +73,32 @@ div.post.unfolded div.comments {
   display: block;
 }
 
+div.header {
+  position: relative;
+}
+span.avatar {
+  position: absolute;
+  top: -0.8ex;
+  left: 0px;
+}
+span.avatar img {
+  height: 2em;
+  border-radius: 2em;
+}
+span.category ,
+span.avatar + span.author {
+  margin-left: 2.5em;
+}
+
 span.author {
   margin-bottom: 5em;
 }
 span.date {
   float: right;
+}
+
+span.category {
+  color: #00aa00;
 }
 
 span.bold {
@@ -85,6 +126,9 @@ span.unknown {
 
 img {
   max-width: 100%;
+}
+
+div.post > img {
   margin-top: 1em;
 }
 
@@ -92,7 +136,7 @@ img {
 
 </head><body>
   <div id="chooser">this google+ archive viewer requires javascript</div>
-  <div id="body"></div>
+  <div id="content"></div>
 
   <script type="text/javascript">
 
@@ -174,11 +218,18 @@ function format_message(message) {
 function format_date(date) {
     return date.substr(0,10);
 };
+function format_author(author) {
+    var ret = "";
+    ret += "<span class='avatar'>"+ format_image(author.image) +"</span>";
+    ret += "<span class='author'>+"+ author.name +"</span>";
+    return ret;
+};
 function format_comment(post) {
     var ret = "";
-    ret += "<span class='author'>"+ post.author.name +"</span>";
+    ret += format_author(post.author);
     ret += "<span class='date'>"+ format_date(post.createdAt) +"</span>";
     ret = "<div class='header'>"+ ret +"</div>";
+
     ret += format_message(post.message);
     return "<div class='comment'>"+ ret +"</div>";
 };
@@ -188,30 +239,90 @@ function format_comments(comments) {
 	ret += format_comment(comments[i]);
     return ret;
 };
+function format_image(url) {
+    if(!(url in images)) {
+	console.error(url);
+	return "";
+    };
+    return "<img src='google-plus-images/"+ images[url] +"'>";
+};
 function format_post(post) {
     var ret = "";
-    ret += "<span class='author'>"+ post.publicId[0] +"</span>";
+    ret += format_author(post.author);
     ret += "<span class='date'>"+ format_date(post.createdAt) +"</span>";
+    if(post.community)
+	ret += "<br><span class='category'>"+ post.community.stream.name +"</span>";
     ret = "<div class='header'>"+ ret +"</div>";
+
     ret += "<div class='message'>"+ format_message(post.message) +"</div>\n";
     if(post.image)
-	ret += "<img src='google-plus-images/"+ images[post.image.proxy] +"'>";
+	ret += format_image(post.image.proxy);
     ret += "<div class='comments'>"+ format_comments(post.comments) +"</div>";
     return ret;
 };
-function format_stream(j) {
+var number = 10;
+var offset = 0;
+function format_pager(posts) {
+    if(!posts.length)
+	return "";
+
+    if(typeof offset == 'undefined')
+	offset = 0;
+    if(offset + number > posts.length)
+	offset = posts.length - number;
+    if(offset < 0)
+	offset = 0;
+
     var ret = "";
-    for(var i in j)
-	ret += "<div class='post'>"+ format_post(j[i]) +"</div>\n";
+    ret += "<span onclick='render(data,offset-number)'>&lt;&lt;</span>";
+    for(var i = 0; i < posts.length; i += number)
+	ret += "<span class='"+ (offset-i ? "" : "current") +"' onclick='render(data,"+ i +")'>"+ i +"</span>";
+    ret += "<span onclick='render(data,offset+number)'>&gt;&gt;</span>";
+    ret = "<div class='pager'>"+ ret +"</div>";
+    return ret;
+};
+function format_posts(posts) {
+    if(!posts.length)
+	return "";
+
+    var pager = format_pager(posts); // normalizes offset
+
+    var ret = "";
+    for(var i = offset; i < offset + number && i < posts.length; ++i)
+	ret += "<div class='post'>"+ format_post(posts[i]) +"</div>\n";
+    ret = pager +"<div id='stream'>"+ ret +"</div>"+ pager;
+    return ret;
+};
+function format_collection(collection) {
+    var ret = "";
+    ret += format_image(collection.image);
+    ret += "<div class='name'>"+ collection.name +"</div>";
+    ret = "<div class='collection'>"+ ret +"</div>";
+
+    ret += format_posts(collection.posts);
+    return ret;
+};
+function format_community(community) {
+    var ret = "";
+    ret += format_image(community.image);
+    ret += "<div class='name'>"+ community.name +"</div>";
+    ret += "<div class='tagline'>"+ community.tagline +"</div>";
+    ret = "<div class='community'>"+ ret +"</div>";
+
+    ret += format_posts(community.categories[0].posts);
     return ret;
 };
 function format_json(json) {
     var ret = "";
-    var j;
+    if(json.accounts[0].image)
+	ret += format_image(json.accounts[0].image);
+    // type == PAGE
+    ret += format_posts(json.accounts[0].posts);
+    // type == PROFILE
     if(json.accounts[0].collections.length)
-	ret += format_stream(json.accounts[0].collections[0].posts);
+	ret += format_collection(json.accounts[0].collections[0]);
     if(json.accounts[0].communities.length)
-	ret += format_stream(json.accounts[0].communities[0].categories[0].posts);
+	ret += format_community(json.accounts[0].communities[0]);
     return ret;
 };
 function format_chooser(feeds) {
@@ -220,16 +331,22 @@ function format_chooser(feeds) {
 	ret += "<div class='feed' onclick='load_feed(\""+ feeds[i] +"\")'>"+ i +"</div>";
     return ret;
 };
-function render(text) {
-    var json;
+function render(data, o) {
+    offset = o;
+    document.getElementById("content").innerHTML = format_json(data);
+    window.scrollTo(0, 0);
+};
+var data;
+function update(text) {
     try {
-	json = JSON.parse(text);
+	data = JSON.parse(text);
     }
     catch(e) {
 	error(e.message);
     }
-    document.getElementById("body").innerHTML = format_json(json);
-};
+    offset = 0;
+    render(data);
+}
 
 function unquote(s) {
     if(!s || s.length < 2)
@@ -249,7 +366,7 @@ function index_images(csv) {
 };
 
 function click_handler(ev) {
-    for(var n = document.getElementById("body").firstElementChild; n; n = n.nextElementSibling)
+    for(var n = document.getElementById("stream").firstElementChild; n; n = n.nextElementSibling)
 	n.className = "post";
     for(var n = ev.target; n; n = n.parentElement) {
 	if(n.className != "post")
@@ -261,14 +378,14 @@ function click_handler(ev) {
 
 var images;
 function load_feed(filename) {
-    document.getElementById("body").innerHTML = "loading json data...";
+    document.getElementById("content").innerHTML = "loading json data...";
     if(!images)
 	fetch_file("google-plus-exports/google-plus-image-list.csv", function(csv) {
 	    index_images(csv);
-	    fetch_file("google-plus-exports/"+ filename, render);
+	    fetch_file("google-plus-exports/"+ filename, update);
 	});
     else
-	fetch_file("google-plus-exports/"+ filename, render);
+	fetch_file("google-plus-exports/"+ filename, update);
 };
 
 function first(a) {
