@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html><head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no">
+
   <title>Refurio Anachro's google+ archive</title>
 
 <style>
@@ -176,7 +178,7 @@ function format_date(date) {
 };
 function format_comment(post) {
     var ret = "";
-    ret += "<span class='author'>"+ post.author.name +"</span>";
+    ret += "<span class='author'>+"+ post.author.name +"</span>";
     ret += "<span class='date'>"+ format_date(post.createdAt) +"</span>";
     ret = "<div class='header'>"+ ret +"</div>";
     ret += format_message(post.message);
