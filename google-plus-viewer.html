@@ -79,6 +79,10 @@ span.user {
   font-size: 95%;
 }
 
+span.unknown {
+  background-color: red;
+}
+
 img {
   max-width: 100%;
   margin-top: 1em;
@@ -92,7 +96,10 @@ img {
 
   <script type="text/javascript">
 
-make_xmlhttprequest = function() {
+function error(m) {
+    alert("ERROR: "+ m);
+};
+function make_xmlhttprequest() {
     try {
 	var ret = new XMLHttpRequest();
 	if(ret.overrideMimeType)
@@ -108,10 +115,9 @@ make_xmlhttprequest = function() {
     catch (e) {}
     try { return new ActiveXObject("Microsoft.XMLHTTP"); }
     catch (e) {}
-    console.error("XMLHTTPRequest not available");
+    error("XMLHTTPRequest not available");
     return null;
 };
-
 function fetch_file(url, handler) {
     var c = make_xmlhttprequest();
     if(!c)
@@ -124,6 +130,8 @@ function fetch_file(url, handler) {
 	case 3: // LOADING
 	    return true;
 	case 4: // DONE
+	    if(c.status != 200)
+		error("got http code "+ c.status +" while fetching "+ url);
 	    if(c.status)
 		handler(c.responseText, c);
 	    else
@@ -159,7 +167,7 @@ function format_message(message) {
 	else if(message[i][0] == 4)
  	    ret += "<span class='tag'>"+ message[i][1] +"</span>\n";
 	else
- 	    ret += "<p>("+ message[i][0] +") "+ message[i][1] +"</p>\n";
+ 	    ret += "<span class='unknown'>("+ message[i][0] +") "+ message[i][1] +"</span>\n";
     };
     return ret;
 };
@@ -180,7 +188,6 @@ function format_comments(comments) {
 	ret += format_comment(comments[i]);
     return ret;
 };
-
 function format_post(post) {
     var ret = "";
     ret += "<span class='author'>"+ post.publicId[0] +"</span>";
@@ -213,9 +220,15 @@ function format_chooser(feeds) {
 	ret += "<div class='feed' onclick='load_feed(\""+ feeds[i] +"\")'>"+ i +"</div>";
     return ret;
 };
-
 function render(text) {
-    document.getElementById("body").innerHTML = format_json(JSON.parse(text));
+    var json;
+    try {
+	json = JSON.parse(text);
+    }
+    catch(e) {
+	error(e.message);
+    }
+    document.getElementById("body").innerHTML = format_json(json);
 };
 
 function unquote(s) {
