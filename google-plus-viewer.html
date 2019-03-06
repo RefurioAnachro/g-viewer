@@ -14,7 +14,7 @@ div#body {
 }
 div#chooser {
   max-width: 500px;
-  margin-bottom: 3em;
+  margin-bottom: 0.5em;
   background-color: white;
   padding-top: 1em;
   padding-bottom: 1em;
@@ -27,7 +27,7 @@ div.feed {
 
 div.post {
   background-color: white;
-  margin-bottom: 3em;
+  margin-bottom: 0.5em;
   padding: 1em;
 }
 
@@ -62,6 +62,7 @@ span.date {
 
 span.bold {
   font-weight: bold;
+  font-size: 95%;
 }
 span.italic {
   font-style: italic;
@@ -75,6 +76,11 @@ span.tag {
 span.user {
   text-decoration: underline;
   font-weight: bold;
+  font-size: 95%;
+}
+
+span.unknown {
+  background-color: red;
 }
 
 img {
@@ -90,7 +96,10 @@ img {
 
   <script type="text/javascript">
 
-make_xmlhttprequest = function() {
+function error(m) {
+    alert("ERROR: "+ m);
+};
+function make_xmlhttprequest() {
     try {
 	var ret = new XMLHttpRequest();
 	if(ret.overrideMimeType)
@@ -106,10 +115,9 @@ make_xmlhttprequest = function() {
     catch (e) {}
     try { return new ActiveXObject("Microsoft.XMLHTTP"); }
     catch (e) {}
-    console.error("XMLHTTPRequest not available");
+    error("XMLHTTPRequest not available");
     return null;
 };
-
 function fetch_file(url, handler) {
     var c = make_xmlhttprequest();
     if(!c)
@@ -122,6 +130,8 @@ function fetch_file(url, handler) {
 	case 3: // LOADING
 	    return true;
 	case 4: // DONE
+	    if(c.status != 200)
+		error("got http code "+ c.status +" while fetching "+ url);
 	    if(c.status)
 		handler(c.responseText, c);
 	    else
@@ -130,7 +140,7 @@ function fetch_file(url, handler) {
 	};
     };
     c.open("GET", url, true);
-    c.withCredentials = true; // allow server to set cookies
+//    c.withCredentials = true; // allow server to set cookies
     c.send();
     return true;
 }
@@ -157,7 +167,7 @@ function format_message(message) {
 	else if(message[i][0] == 4)
  	    ret += "<span class='tag'>"+ message[i][1] +"</span>\n";
 	else
- 	    ret += "<p>("+ message[i][0] +") "+ message[i][1] +"</p>\n";
+ 	    ret += "<span class='unknown'>("+ message[i][0] +") "+ message[i][1] +"</span>\n";
     };
     return ret;
 };
@@ -178,7 +188,6 @@ function format_comments(comments) {
 	ret += format_comment(comments[i]);
     return ret;
 };
-
 function format_post(post) {
     var ret = "";
     ret += "<span class='author'>"+ post.publicId[0] +"</span>";
@@ -211,9 +220,15 @@ function format_chooser(feeds) {
 	ret += "<div class='feed' onclick='load_feed(\""+ feeds[i] +"\")'>"+ i +"</div>";
     return ret;
 };
-
 function render(text) {
-    document.getElementById("body").innerHTML = format_json(JSON.parse(text));
+    var json;
+    try {
+	json = JSON.parse(text);
+    }
+    catch(e) {
+	error(e.message);
+    }
+    document.getElementById("body").innerHTML = format_json(json);
 };
 
 function unquote(s) {
@@ -221,16 +236,13 @@ function unquote(s) {
 	return "zero";
     return s.substr(1,s.length-2);
 };
-
 function index_images(csv) {
     images = {};
     var lines = csv.split("\n");
     var skip = 1;
     for(var i in lines) {
-	if(skip) {
-	    skip = 0;
+	if(skip-- > 0)
 	    continue;
-	};
 	var row = lines[i].split(";");
 	images[unquote(row[0])] = unquote(row[2]);
     };
@@ -247,6 +259,7 @@ function click_handler(ev) {
     };
 };
 
+var images;
 function load_feed(filename) {
     document.getElementById("body").innerHTML = "loading json data...";
     if(!images)
@@ -257,6 +270,11 @@ function load_feed(filename) {
     else
 	fetch_file("google-plus-exports/"+ filename, render);
 };
+
+function first(a) {
+    for(var i in a)
+	return a[i];
+}
 
 var feeds = {
     "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
@@ -270,16 +288,9 @@ var feeds = {
 //    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
 };
 
-for(var i in feeds) {
-    load_feed(feeds[i]);
-    break;
-};
-
-document.getElementById("chooser").innerHTML = format_chooser(feeds);
-
-var images;
-
 document.onclick = click_handler;
+document.getElementById("chooser").innerHTML = format_chooser(feeds);
+load_feed(first(feeds));
 
   </script>
 </body></html>
