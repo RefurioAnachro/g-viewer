@@ -236,16 +236,13 @@ function unquote(s) {
 	return "zero";
     return s.substr(1,s.length-2);
 };
-
 function index_images(csv) {
     images = {};
     var lines = csv.split("\n");
     var skip = 1;
     for(var i in lines) {
-	if(skip) {
-	    skip = 0;
+	if(skip-- > 0)
 	    continue;
-	};
 	var row = lines[i].split(";");
 	images[unquote(row[0])] = unquote(row[2]);
     };
@@ -262,6 +259,7 @@ function click_handler(ev) {
     };
 };
 
+var images;
 function load_feed(filename) {
     document.getElementById("body").innerHTML = "loading json data...";
     if(!images)
@@ -272,6 +270,11 @@ function load_feed(filename) {
     else
 	fetch_file("google-plus-exports/"+ filename, render);
 };
+
+function first(a) {
+    for(var i in a)
+	return a[i];
+}
 
 var feeds = {
     "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
@@ -285,16 +288,9 @@ var feeds = {
 //    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
 };
 
-for(var i in feeds) {
-    load_feed(feeds[i]);
-    break;
-};
-
-document.getElementById("chooser").innerHTML = format_chooser(feeds);
-
-var images;
-
 document.onclick = click_handler;
+document.getElementById("chooser").innerHTML = format_chooser(feeds);
+load_feed(first(feeds));
 
   </script>
 </body></html>
