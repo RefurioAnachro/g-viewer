@@ -193,6 +193,33 @@ function fetch_file(url, handler) {
     return true;
 }
 
+// widgets
+var offset = 0;
+function format_pager(posts) {
+    if(!posts.length)
+	return "";
+
+    if(typeof offset == 'undefined')
+	offset = 0;
+    if(offset >= posts.length || offset < 0)
+	offset = 0;
+
+    var ret = "";
+    ret += "<span onclick='render(data,offset-number)'>&lt;&lt;</span>";
+    for(var i = 0; i < posts.length; i += number)
+	ret += "<span class='"+ (offset-i ? "" : "current") +"' onclick='render(data,"+ i +")'>"+ i +"</span>";
+    ret += "<span onclick='render(data,offset+number)'>&gt;&gt;</span>";
+    ret = "<div class='pager'>"+ ret +"</div>";
+    return ret;
+};
+function format_chooser(feeds) {
+    var ret = "";
+    for(var i in feeds)
+	ret += "<div class='feed' onclick='chooser_handler(\""+ feeds[i] +"\")'>"+ i +"</div>";
+    return ret;
+};
+
+// format file contents
 function format_message(message) {
     var ret = "";
     for(i in message) {
@@ -264,24 +291,6 @@ function format_post(post) {
     ret += "<div class='comments'>"+ format_comments(post.comments) +"</div>";
     return ret;
 };
-var offset = 0;
-function format_pager(posts) {
-    if(!posts.length)
-	return "";
-
-    if(typeof offset == 'undefined')
-	offset = 0;
-    if(offset >= posts.length || offset < 0)
-	offset = 0;
-
-    var ret = "";
-    ret += "<span onclick='render(data,offset-number)'>&lt;&lt;</span>";
-    for(var i = 0; i < posts.length; i += number)
-	ret += "<span class='"+ (offset-i ? "" : "current") +"' onclick='render(data,"+ i +")'>"+ i +"</span>";
-    ret += "<span onclick='render(data,offset+number)'>&gt;&gt;</span>";
-    ret = "<div class='pager'>"+ ret +"</div>";
-    return ret;
-};
 function format_posts(posts) {
     if(!posts.length)
 	return "";
@@ -326,12 +335,7 @@ function format_json(json) {
 	ret += format_community(json.accounts[0].communities[0]);
     return ret;
 };
-function format_chooser(feeds) {
-    var ret = "";
-    for(var i in feeds)
-	ret += "<div class='feed' onclick='chooser_handler(\""+ feeds[i] +"\")'>"+ i +"</div>";
-    return ret;
-};
+
 function render(data, o) {
     offset = o;
     document.getElementById("content").innerHTML = format_json(data);
@@ -348,23 +352,8 @@ function update(text) {
     render(data, offset);
 }
 
-function unquote(s) {
-    if(!s || s.length < 2)
-	return "zero";
-    return s.substr(1,s.length-2);
-};
-function index_images(csv) {
-    images = {};
-    var lines = csv.split("\n");
-    var skip = 1;
-    for(var i in lines) {
-	if(skip-- > 0)
-	    continue;
-	var row = lines[i].split(";");
-	images[unquote(row[0])] = unquote(row[2]);
-    };
-};
-
+// event handlers
+var file;
 function chooser_handler(filename) {
     offset = 0;
     file = filename;
@@ -383,7 +372,7 @@ function click_handler(ev) {
     write_args();
 };
 
-/* reading and writing url #arguments */
+// url #arguments
 function first(a) {
     for(var i in a)
 	return a[i];
@@ -430,6 +419,23 @@ function write_args() {
     window.location.hash = "#"+ s;
 }
 
+// loading data files
+function unquote(s) {
+    if(!s || s.length < 2)
+	return "zero";
+    return s.substr(1,s.length-2);
+};
+function index_images(csv) {
+    images = {};
+    var lines = csv.split("\n");
+    var skip = 1;
+    for(var i in lines) {
+	if(skip-- > 0)
+	    continue;
+	var row = lines[i].split(";");
+	images[unquote(row[0])] = unquote(row[2]);
+    };
+};
 var images;
 function load_feed(filename) {
     document.getElementById("content").innerHTML = "loading json data...";
@@ -454,7 +460,6 @@ var feeds = {
 //    "zz circle shares archive": "g+-feed-117866562756294273963-QzKfPE-zz-circle-shares-archive-collection-20190116-1of1.json",
 //    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
 };
-var file;
 
 read_args();
 
