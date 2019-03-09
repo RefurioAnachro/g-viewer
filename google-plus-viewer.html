@@ -146,7 +146,7 @@ div.post > img {
 
 function error(m) {
     alert("ERROR: "+ m);
-};
+}
 function make_xmlhttprequest() {
     try {
 	var ret = new XMLHttpRequest();
@@ -165,7 +165,7 @@ function make_xmlhttprequest() {
     catch (e) {}
     error("XMLHTTPRequest not available");
     return null;
-};
+}
 function fetch_file(url, handler) {
     var c = make_xmlhttprequest();
     if(!c)
@@ -185,8 +185,8 @@ function fetch_file(url, handler) {
 	    else
 		handler(null, c);
 	    return true;
-	};
-    };
+	}
+    }
     c.open("GET", url, true);
 //    c.withCredentials = true; // allow server to set cookies
     c.send();
@@ -211,13 +211,13 @@ function format_pager(posts) {
     ret += "<span onclick='render(data,offset+number)'>&gt;&gt;</span>";
     ret = "<div class='pager'>"+ ret +"</div>";
     return ret;
-};
+}
 function format_chooser(feeds) {
     var ret = "";
     for(var i in feeds)
 	ret += "<div class='feed' onclick='chooser_handler(\""+ feeds[i] +"\")'>"+ i +"</div>";
     return ret;
-};
+}
 
 // format file contents
 function format_message(message) {
@@ -243,18 +243,18 @@ function format_message(message) {
  	    ret += "<span class='tag'>"+ message[i][1] +"</span>\n";
 	else
  	    ret += "<span class='unknown'>("+ message[i][0] +") "+ message[i][1] +"</span>\n";
-    };
+    }
     return ret;
-};
+}
 function format_date(date) {
     return date.substr(0,10);
-};
+}
 function format_author(author) {
     var ret = "";
     ret += "<span class='avatar'>"+ format_image(author.image) +"</span>";
     ret += "<span class='author'>+"+ author.name +"</span>";
     return ret;
-};
+}
 function format_comment(post) {
     var ret = "";
     ret += format_author(post.author);
@@ -263,20 +263,20 @@ function format_comment(post) {
 
     ret += format_message(post.message);
     return "<div class='comment'>"+ ret +"</div>";
-};
+}
 function format_comments(comments) {
     var ret = "";
     for(var i in comments)
 	ret += format_comment(comments[i]);
     return ret;
-};
+}
 function format_image(url) {
     if(!(url in images)) {
 	console.error(url);
 	return "";
-    };
+    }
     return "<img src='google-plus-images/"+ images[url] +"'>";
-};
+}
 function format_post(post) {
     var ret = "";
     ret += format_author(post.author);
@@ -290,7 +290,7 @@ function format_post(post) {
 	ret += format_image(post.image.proxy);
     ret += "<div class='comments'>"+ format_comments(post.comments) +"</div>";
     return ret;
-};
+}
 function format_posts(posts) {
     if(!posts.length)
 	return "";
@@ -302,7 +302,7 @@ function format_posts(posts) {
 	ret += "<div class='post'>"+ format_post(posts[i]) +"</div>\n";
     ret = pager +"<div id='stream'>"+ ret +"</div>"+ pager;
     return ret;
-};
+}
 function format_collection(collection) {
     var ret = "";
     ret += format_image(collection.image);
@@ -311,7 +311,7 @@ function format_collection(collection) {
 
     ret += format_posts(collection.posts);
     return ret;
-};
+}
 function format_community(community) {
     var ret = "";
     ret += format_image(community.image);
@@ -321,7 +321,7 @@ function format_community(community) {
 
     ret += format_posts(community.categories[0].posts);
     return ret;
-};
+}
 function format_json(json) {
     var ret = "";
     if(json.accounts[0].image)
@@ -334,13 +334,13 @@ function format_json(json) {
     if(json.accounts[0].communities.length)
 	ret += format_community(json.accounts[0].communities[0]);
     return ret;
-};
+}
 
 function render(data, o) {
     offset = o;
     document.getElementById("content").innerHTML = format_json(data);
     window.scrollTo(0, 0);
-};
+}
 var data;
 function update(text) {
     try {
@@ -359,7 +359,7 @@ function chooser_handler(filename) {
     file = filename;
     write_args();
     load_feed(file);
-};
+}
 function click_handler(ev) {
     for(var n = document.getElementById("stream").firstElementChild; n; n = n.nextElementSibling)
 	n.className = "post";
@@ -368,9 +368,9 @@ function click_handler(ev) {
 	    continue;
 	n.className = "post unfolded";
 	window.scrollTo(0, n.offsetTop);
-    };
+    }
     write_args();
-};
+}
 
 // url #arguments
 function first(a) {
@@ -424,7 +424,7 @@ function unquote(s) {
     if(!s || s.length < 2)
 	return "zero";
     return s.substr(1,s.length-2);
-};
+}
 function index_images(csv) {
     images = {};
     var lines = csv.split("\n");
@@ -434,8 +434,8 @@ function index_images(csv) {
 	    continue;
 	var row = lines[i].split(";");
 	images[unquote(row[0])] = unquote(row[2]);
-    };
-};
+    }
+}
 var images;
 function load_feed(filename) {
     document.getElementById("content").innerHTML = "loading json data...";
@@ -446,7 +446,7 @@ function load_feed(filename) {
 	});
     else
 	fetch_file("google-plus-exports/"+ filename, update);
-};
+}
 
 var number = 50; // of posts per page
 var feeds = {
@@ -459,7 +459,7 @@ var feeds = {
 //    "a mathematicians playlist": "g+-feed-117866562756294273963-AejbfB-a-mathematicians-playlist-collection-20190116-1of1.json",
 //    "zz circle shares archive": "g+-feed-117866562756294273963-QzKfPE-zz-circle-shares-archive-collection-20190116-1of1.json",
 //    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
-};
+}
 
 read_args();
 
