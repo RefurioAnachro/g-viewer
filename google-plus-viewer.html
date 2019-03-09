@@ -329,7 +329,7 @@ function format_json(json) {
 function format_chooser(feeds) {
     var ret = "";
     for(var i in feeds)
-	ret += "<div class='feed' onclick='load_feed(\""+ feeds[i] +"\")'>"+ i +"</div>";
+	ret += "<div class='feed' onclick='chooser_handler(\""+ feeds[i] +"\")'>"+ i +"</div>";
     return ret;
 };
 function render(data, o) {
@@ -345,8 +345,7 @@ function update(text) {
     catch(e) {
 	error(e.message);
     }
-    offset = 0;
-    render(data);
+    render(data, offset);
 }
 
 function unquote(s) {
@@ -366,6 +365,12 @@ function index_images(csv) {
     };
 };
 
+function chooser_handler(filename) {
+    offset = 0;
+    file = filename;
+    write_args();
+    load_feed(file);
+};
 function click_handler(ev) {
     for(var n = document.getElementById("stream").firstElementChild; n; n = n.nextElementSibling)
 	n.className = "post";
@@ -375,7 +380,55 @@ function click_handler(ev) {
 	n.className = "post unfolded";
 	window.scrollTo(0, n.offsetTop);
     };
+    write_args();
 };
+
+/* reading and writing url #arguments */
+function first(a) {
+    for(var i in a)
+	return a[i];
+}
+function split1(q, s) {
+    var k = s.search(q);
+    var j = q.length;
+    if(k < 0)
+	return [s, "1"];
+    return [s.substr(0, k), s.substr(k+j, s.length - k - j)];
+}
+function split_args(u) {
+    if(u == "")
+	return [];
+    var l = u.split("&");
+    var r = {};
+    for(i in l) {
+	var a = split1("=", l[i]).map(decodeURIComponent);
+	r[a[0]] = a[1];
+    }
+    return r;
+}
+function join_args(l) {
+    var r = [];
+    for(i in l)
+	r.push(""+ i +"=" + l[i]);
+    return r.map(encodeURIComponent).join("&");
+}
+function read_args() {
+    var args = split_args(window.location.hash.substr(1));
+    file = args["f"];
+    offset = args["o"];
+    if(!file)
+	file = first(feeds);
+}
+function write_args() {
+    var args = {};
+    if(file != first(feeds))
+	args.f = file;
+    if(offset)
+	args.o = offset;
+    var s = join_args(args);
+    s = s.split("%3D").join("="); // improve readability
+    window.location.hash = "#"+ s;
+}
 
 var images;
 function load_feed(filename) {
@@ -389,11 +442,6 @@ function load_feed(filename) {
 	fetch_file("google-plus-exports/"+ filename, update);
 };
 
-function first(a) {
-    for(var i in a)
-	return a[i];
-}
-
 var number = 50; // of posts per page
 var feeds = {
     "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
@@ -406,10 +454,13 @@ var feeds = {
 //    "zz circle shares archive": "g+-feed-117866562756294273963-QzKfPE-zz-circle-shares-archive-collection-20190116-1of1.json",
 //    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
 };
+var file;
+
+read_args();
 
 document.onclick = click_handler;
 document.getElementById("chooser").innerHTML = format_chooser(feeds);
-load_feed(first(feeds));
+load_feed(file);
 
   </script>
 </body></html>
