@@ -271,9 +271,7 @@ function format_pager(posts) {
 
     if(typeof offset == 'undefined')
 	offset = 0;
-    if(offset + number > posts.length)
-	offset = posts.length - number;
-    if(offset < 0)
+    if(offset >= posts.length || offset < 0)
 	offset = 0;
 
     var ret = "";
