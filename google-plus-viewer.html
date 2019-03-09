@@ -70,10 +70,10 @@ div.comment {
   border-top: 1px solid black;
 }
 
-div.post.unfolded div.message {
+div.post.zoom div.message {
   max-height: initial;
 }
-div.post.unfolded div.comments {
+div.post.zoom div.comments {
   display: block;
 }
 
@@ -195,21 +195,20 @@ function fetch_file(url, handler) {
 }
 
 // widgets
-var offset = 0;
 function format_pager(posts) {
     if(!posts.length)
 	return "";
 
-    if(typeof offset == 'undefined')
-	offset = 0;
-    if(offset >= posts.length || offset < 0)
-	offset = 0;
+    if(typeof arg.offset == 'undefined')
+	arg.offset = 0;
+    if(arg.offset >= posts.length || arg.offset < 0)
+	arg.offset = 0;
 
     var ret = "";
-    ret += "<span onclick='render(data,offset-number)'>&lt;&lt;</span>";
+    ret += "<span onclick='render(data, arg.offset-number)'>&lt;&lt;</span>";
     for(var i = 0; i < posts.length; i += number)
-	ret += "<span class='"+ (offset-i ? "" : "current") +"' onclick='render(data,"+ i +")'>"+ i +"</span>";
-    ret += "<span onclick='render(data,offset+number)'>&gt;&gt;</span>";
+	ret += "<span class='"+ (arg.offset-i ? "" : "current") +"' onclick='render(data,"+ i +")'>"+ i +"</span>";
+    ret += "<span onclick='render(data, arg.offset+number)'>&gt;&gt;</span>";
     ret = "<div class='pager'>"+ ret +"</div>";
     return ret;
 }
@@ -296,11 +295,11 @@ function format_posts(posts) {
     if(!posts.length)
 	return "";
 
-    var pager = format_pager(posts); // normalizes offset
+    var pager = format_pager(posts); // normalizes arg.offset
 
     var ret = "";
-    for(var i = offset; i < offset + number && i < posts.length; ++i)
-	ret += "<div class='post'>"+ format_post(posts[i]) +"</div>\n";
+    for(var i = arg.offset; i < arg.offset + number && i < posts.length; ++i)
+	ret += "<div class='post' id='"+ posts[i].publicId[1] +"'>"+ format_post(posts[i]) +"</div>\n";
     ret = pager +"<div id='stream'>"+ ret +"</div>"+ pager;
     return ret;
 }
@@ -338,7 +337,7 @@ function format_json(json) {
 }
 
 function render(data, o) {
-    offset = o;
+    arg.offset = o;
     document.getElementById("content").innerHTML = format_json(data);
     window.scrollTo(0, 0);
 }
@@ -350,27 +349,38 @@ function update(text) {
     catch(e) {
 	error(e.message);
     }
-    render(data, offset);
+    render(data, arg.offset);
+    zoom(arg.post);
 }
 
 // event handlers
-var file;
 function chooser_handler(filename) {
-    offset = 0;
-    file = filename;
+    arg.offset = 0;
+    arg.file = filename;
     write_args();
-    load_feed(file);
+    load_feed(filename);
 }
-function click_handler(ev) {
+function unzoom() {
     for(var n = document.getElementById("stream").firstElementChild; n; n = n.nextElementSibling)
 	n.className = "post";
-    for(var n = ev.target; n; n = n.parentElement) {
-	if(n.className != "post")
-	    continue;
-	n.className = "post unfolded";
-	window.scrollTo(0, n.offsetTop);
-    }
+}
+function zoom(id) {
+    unzoom();
+    var n = document.getElementById(id);
+    n.className = "post zoom";
+    setTimeout(function() { // argh!
+        window.scrollTo(0, n.offsetTop);
+    }, 0);
+    arg.post = id;
     write_args();
+}
+function click_handler(ev) {
+    var n;
+    for(n = ev.target; n; n = n.parentElement)
+	if(n.className == "post")
+	    break;
+    if(n)
+	zoom(n.id);
 }
 
 // url #arguments
@@ -389,7 +399,7 @@ function split_args(u) {
     if(u == "")
 	return [];
     var l = u.split("&");
-    var r = {};
+    var r = {}
     for(i in l) {
 	var a = split1("=", l[i]).map(decodeURIComponent);
 	r[a[0]] = a[1];
@@ -403,19 +413,15 @@ function join_args(l) {
     return r.map(encodeURIComponent).join("&");
 }
 function read_args() {
-    var args = split_args(window.location.hash.substr(1));
-    file = args["f"];
-    offset = args["o"];
-    if(!file)
-	file = first(feeds);
+    var a = split_args(window.location.hash.substr(1));
+    for(i in default_arg)
+	arg[i] = default_arg[i];
+    for(i in arg)
+	if(i in a)
+	    arg[i] = a[i];
 }
 function write_args() {
-    var args = {};
-    if(file != first(feeds))
-	args.f = file;
-    if(offset)
-	args.o = offset;
-    var s = join_args(args);
+    var s = join_args(arg);
     s = s.split("%3D").join("="); // improve readability
     window.location.hash = "#"+ s;
 }
@@ -427,7 +433,7 @@ function unquote(s) {
     return s.substr(1,s.length-2);
 }
 function index_images(csv) {
-    images = {};
+    images = {}
     var lines = csv.split("\n");
     var skip = 1;
     for(var i in lines) {
@@ -462,11 +468,18 @@ var feeds = {
 //    "spherical reflections": "g+-feed-117866562756294273963-spherical-reflections-page-20190116-1of1.json",
 }
 
+var arg = {};
+var default_arg = {
+    file: first(feeds),
+    offset: 0,
+    post: null,
+};
+
 read_args();
 
 document.onclick = click_handler;
 document.getElementById("chooser").innerHTML = format_chooser(feeds);
-load_feed(file);
+load_feed(arg.file);
 
   </script>
 </body></html>
