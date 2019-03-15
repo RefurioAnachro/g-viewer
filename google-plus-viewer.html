@@ -12,21 +12,21 @@ body {
   background-color: #bebebe;
 }
 
+div#accounts ,
 div#chooser {
   max-width: 500px;
   margin-bottom: 0.5em;
   background-color: white;
   padding-top: 0.8em;
   padding-bottom: 0.8em;
-}
-div#chooser .feed {
-  margin-top: 0.2em;
-  margin-bottom: 0.2em;
-}
-div.feed {
-  font-weight: bold;
   padding-left: 1em;
   padding-right: 1em;
+}
+div#chooser a.feed {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  font-weight: bold;
+  display: block;
 }
 
 div.pager span {
@@ -140,6 +140,7 @@ div.post > img {
 
 </head><body>
   <div id="chooser">this google+ archive viewer requires javascript</div>
+  <div id="accounts"></div>
   <div id="content"></div>
   <a href="https://github.com/RefurioAnachro/g-viewer">Google+ Archive Viewer</a>
 
@@ -212,10 +213,34 @@ function format_pager(posts) {
     ret = "<div class='pager'>"+ ret +"</div>";
     return ret;
 }
+function select_account(i) {
+    if(!(i in data.accounts))
+       i = 0;
+    arg.account = i;
+    render(data, arg.offset);
+}
+function format_accounts() {
+    if(!data.accounts[1])
+	return "";
+    var ret = "";
+    var x = [];
+    for(var i in data.accounts)
+	x.push(data.accounts[i]);
+    data.accounts = x.sort(function(a, b) {
+	if(a.name > b.name)
+	    return 1;
+	if(a.name < b.name)
+	    return -1;
+	return 0;
+    });
+    for(var i in data.accounts)
+	ret += "<a href='#' class='account' onclick='select_account(\""+ i +"\")'>+"+ data.accounts[i].name +"</a>\n";
+    return ret;
+}
 function format_chooser(feeds) {
     var ret = "";
     for(var i in feeds)
-	ret += "<div class='feed' onclick='chooser_handler(\""+ feeds[i] +"\")'>"+ i +"</div>";
+	ret += "<a href='#' class='feed' onclick='chooser_handler(\""+ feeds[i] +"\")'>"+ i +"</a>";
     return ret;
 }
 
@@ -324,21 +349,22 @@ function format_community(community) {
 }
 function format_json(json) {
     var ret = "";
-    if(json.accounts[0].image)
-	ret += format_image(json.accounts[0].image);
+    if(json.accounts[arg.account].image)
+	ret += format_image(json.accounts[arg.account].image);
     // type == PAGE
-    ret += format_posts(json.accounts[0].posts);
+    ret += format_posts(json.accounts[arg.account].posts);
     // type == PROFILE
-    if(json.accounts[0].collections.length)
-	ret += format_collection(json.accounts[0].collections[0]);
-    if(json.accounts[0].communities.length)
-	ret += format_community(json.accounts[0].communities[0]);
+    if(json.accounts[arg.account].collections.length)
+	ret += format_collection(json.accounts[arg.account].collections[0]);
+    if(json.accounts[arg.account].communities.length)
+	ret += format_community(json.accounts[arg.account].communities[0]);
     return ret;
 }
 
 function render(data, o) {
     arg.offset = o;
     document.getElementById("content").innerHTML = format_json(data);
+    document.getElementById("accounts").innerHTML = format_accounts(data);
     window.scrollTo(0, 0);
 }
 var data;
@@ -457,6 +483,7 @@ function load_feed(filename) {
 
 var number = 50; // of posts per page
 var feeds = {
+    "download frenzy rf Mar 15": "g+-feed-all-20190315-1of1.json",
     "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
     "lost in found maths": "g+-feed-115434895453136495635-0hSTf-lost-in-found-maths-collection-20190116-1of1.json",
     "mandelbrot impressions": "g+-feed-117866562756294273963-4Cccx-mandelbrot-impressions-collection-20190116-1of1.json",
@@ -473,6 +500,7 @@ var default_arg = {
     file: first(feeds),
     offset: 0,
     post: null,
+    account: 0,
 };
 
 read_args();
