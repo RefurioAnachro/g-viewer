@@ -54,26 +54,43 @@ div.post {
   padding: 1em;
 }
 
-div.header {
+div.post > div.comments > div.comment > div.header ,
+div.post > div.header {
   margin-bottom: 1em;
 }
-div.message {
+div.post > div.message {
   max-height: 8em;
   overflow: hidden;
 }
-div.comments {
+
+div.post > div.attachment {
+}
+div.post > div.attachment > a {
+  display: block;
+  border: 1px solid black;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  padding: 1ex;
+  overflow: hidden;
+}
+div.post > div.attachment > video ,
+div.post > div.attachment > img {
+  margin-top: 1em;
+}
+
+div.post > div.comments {
   display: none;
 }
-div.comment {
+div.post > div.comments > div.comment {
   margin-top: 1em;
   padding-top: 1em;
   border-top: 1px solid black;
 }
 
-div.post.zoom div.message {
+div.post.zoom > div.message {
   max-height: initial;
 }
-div.post.zoom div.comments {
+div.post.zoom > div.comments {
   display: block;
 }
 
@@ -132,10 +149,6 @@ img {
   max-width: 100%;
 }
 
-div.post > img {
-  margin-top: 1em;
-}
-
 </style>
 
 </head><body>
@@ -168,7 +181,11 @@ function make_xmlhttprequest() {
     error("XMLHTTPRequest not available");
     return null;
 }
+function info(m) {
+    document.getElementById("content").innerHTML = m;
+}
 function fetch_file(url, handler) {
+    info("fetching "+ url);
     var c = make_xmlhttprequest();
     if(!c)
 	return null;
@@ -276,7 +293,7 @@ function format_date(date) {
 }
 function format_author(author) {
     var ret = "";
-    ret += "<span class='avatar'>"+ format_image(author.image) +"</span>";
+    ret += "<span class='avatar'>"+ format_img(author.image) +"</span>";
     ret += "<span class='author'>+"+ author.name +"</span>";
     return ret;
 }
@@ -295,12 +312,68 @@ function format_comments(comments) {
 	ret += format_comment(comments[i]);
     return ret;
 }
-function format_image(url) {
+function image_src(u) {
+    if(old_format)
+	return "google-plus-images/"+ u;
+    return "google-plus-images/"+ u[0]+u[1]+"/"+ u[2]+u[3]+"/"+ u[4]+u[5]+"/"+ u;
+}
+function format_image(image) {
+    if(!image) {
+	console.error("image missing");
+	return "[no image]";
+    }
+    var ret;
+    if(!(image.proxy in images))
+	return "&lt;img "+ image.url +"&gt;";
+    var src = image_src(images[image.proxy]);
+    ret = "<img src='"+ src +"'";
+    if(image.url != image.proxy)
+	ret += " title='"+ image.url +"'";
+    ret += ">";
+    return ret;
+}
+function video_src(u) {
+    if(old_format)
+	return "google-plus-videos/"+ u;
+    return "google-plus-videos/"+ u[0]+u[1]+"/"+ u[2]+u[3]+"/"+ u[4]+u[5]+"/"+ u;
+}
+function format_video(url, title) {
     if(!(url in images)) {
-	console.error(url);
+	console.log("missing video", url);
 	return "";
     }
-    return "<img src='google-plus-images/"+ images[url] +"'>";
+    var ret;
+    ret = "<video src='"+ video_src(videos[url]) +"'";
+    if(title)
+	ret += " title='"+ title +"'";
+    ret += +">";
+    return ret;
+}
+function format_link(link) {
+    var ret = "";
+    if(link.image)
+	ret += format_image(link.image);
+    ret += "<h3>"+ link.title +"</h3>";
+    if(link.description)
+	ret += "<p>"+ link.description +"</p>";
+    ret = "<a href='"+ link.url +"'>"+ ret +"</a>";
+    return ret;
+}
+function format_attachments(post) {
+    var ret = "";
+    if(post.link)
+	ret += format_link(post.link);
+    if(post.video)
+	ret += format_video(post.video.url);
+    if(post.videos)
+	for(var i in post.videos)
+	    ret += format_video(post.videos[i].url);
+    if(post.image)
+	ret += format_image(post.image);
+    if(post.images)
+	for(var i in post.images)
+	    ret += format_image(post.images[i]);
+    return ret;
 }
 function format_post(post) {
     var ret = "";
@@ -311,9 +384,8 @@ function format_post(post) {
     ret = "<div class='header'>"+ ret +"</div>";
 
     ret += "<div class='message'>"+ format_message(post.message) +"</div>\n";
-    if(post.image)
-	ret += format_image(post.image.proxy);
-    ret += "<div class='comments'>"+ format_comments(post.comments) +"</div>";
+    ret += "<div class='attachment'>"+ format_attachments(post) +"</div>\n";
+    ret += "<div class='comments'>"+ format_comments(post.comments) +"</div>\n";
     return ret;
 }
 function format_posts(posts) {
@@ -328,9 +400,12 @@ function format_posts(posts) {
     ret = pager +"<div id='stream'>"+ ret +"</div>"+ pager;
     return ret;
 }
+function format_img(u) {
+    return format_image({ proxy: u, url: u });
+}
 function format_collection(collection) {
     var ret = "";
-    ret += format_image(collection.image);
+    ret += format_img(collection.image);
     ret += "<div class='name'>"+ collection.name +"</div>";
     ret = "<div class='collection'>"+ ret +"</div>";
 
@@ -339,7 +414,7 @@ function format_collection(collection) {
 }
 function format_community(community) {
     var ret = "";
-    ret += format_image(community.image);
+    ret += format_img(community.image);
     ret += "<div class='name'>"+ community.name +"</div>";
     ret += "<div class='tagline'>"+ community.tagline +"</div>";
     ret = "<div class='community'>"+ ret +"</div>";
@@ -349,8 +424,9 @@ function format_community(community) {
 }
 function format_json(json) {
     var ret = "";
-    if(json.accounts[arg.account].image)
-	ret += format_image(json.accounts[arg.account].image);
+    // account images don't get downloaded:
+//    if(json.accounts[arg.account].image)
+//	ret += format_img(json.accounts[arg.account].image);
     // type == PAGE
     ret += format_posts(json.accounts[arg.account].posts);
     // type == PROFILE
@@ -362,6 +438,7 @@ function format_json(json) {
 }
 
 function render(data, o) {
+    info("rendering");
     arg.offset = o;
     document.getElementById("content").innerHTML = format_json(data);
     document.getElementById("accounts").innerHTML = format_accounts(data);
@@ -393,6 +470,8 @@ function unzoom() {
 function zoom(id) {
     unzoom();
     var n = document.getElementById(id);
+    if(!n)
+	return;
     n.className = "post zoom";
     setTimeout(function() { // argh!
         window.scrollTo(0, n.offsetTop);
@@ -458,32 +537,38 @@ function unquote(s) {
 	return "zero";
     return s.substr(1,s.length-2);
 }
-function index_images(csv) {
-    images = {}
+function index_list(csv) {
+    var ret = {}
     var lines = csv.split("\n");
     var skip = 1;
     for(var i in lines) {
 	if(skip-- > 0)
 	    continue;
 	var row = lines[i].split(";");
-	images[unquote(row[0])] = unquote(row[2]);
+	ret[unquote(row[0])] = unquote(row[2]);
     }
+    return ret;
 }
-var images;
+var images, videos;
 function load_feed(filename) {
     document.getElementById("content").innerHTML = "loading json data...";
     if(!images)
 	fetch_file("google-plus-exports/google-plus-image-list.csv", function(csv) {
-	    index_images(csv);
-	    fetch_file("google-plus-exports/"+ filename, update);
+	    images = index_list(csv);
+	    load_feed(filename);
+	});
+    else if(!videos)
+	fetch_file("google-plus-exports/google-plus-video-list.csv", function(csv) {
+	    videos = index_list(csv);
+	    load_feed(filename);
 	});
     else
 	fetch_file("google-plus-exports/"+ filename, update);
 }
 
 var number = 50; // of posts per page
+var old_format = false; // prior to version 1.8.3
 var feeds = {
-    "download frenzy rf Mar 15": "g+-feed-all-20190315-1of1.json",
     "journeys in higher maths": "g+-feed-115434895453136495635-8fKZX-journeys-in-higher-maths-collection-20190116-1of1.json",
     "lost in found maths": "g+-feed-115434895453136495635-0hSTf-lost-in-found-maths-collection-20190116-1of1.json",
     "mandelbrot impressions": "g+-feed-117866562756294273963-4Cccx-mandelbrot-impressions-collection-20190116-1of1.json",

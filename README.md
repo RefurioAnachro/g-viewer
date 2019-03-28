@@ -13,7 +13,7 @@ https://gplus-exporter.friendsplus.me/
 
 If you haven't, download your g+ streams with it now! As long as you have fewer than 800 posts per stream, it's free of charge. Otherwise it'll stop after 800 posts. You can try downloading your collections separately instead. On the other hand, the author is a nice guy, and you wouldn't do harm by throwing a few bucks his way (since he is asking so nicely).
 
-After downloading, export the relevant streams in JSON format. Among other things, that will generate two directories called `google-plus-exports` and `google-plus-images`. Put those in your webserver's htdocs directory.
+After downloading, export the relevant streams in JSON format. Among other things, that will generate three directories called `google-plus-exports`, `google-plus-images`, and `google-plus-videos`. Put those in your webserver's htdocs directory.
 
 Then fetch `g+viewer.html` by right-clicking here:
 
@@ -43,3 +43,7 @@ Tell me what you think, patches or pull requests also welcome.
 The g+ announcement and discussion are here:
 
 https://plus.google.com/+RefurioAnachro/posts/ZgUMDkLtSFP
+
+## Problems
+
+The format for the external pathnames has changed in the exporter with version 1.8.3(?). If you downloaded your archive with an older version, and you see no images, then you can set the variable `old_version` to `true`.
